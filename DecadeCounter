@@ -1,0 +1,135 @@
+//Code for Decade Counter Decoder
+const int bit_1 = 0;
+const int bit_2 = 1;
+const int bit_4 = 2;
+const int bit_8 = 3;
+const int select_0 = 4;
+const int select_1 = 5;
+const int select_2 = 6;
+const int select_3 = 7;
+
+int bit_1A = A0;
+int bit_2A = A1;
+int bit_4A = A2;
+int bit_8A = A3;
+
+int digitvalue = 0;
+int temp = 0;
+int digit1 = 0;
+int digit2 = 0;
+int digit3 = 0;
+int digit4 = 0;
+int debugbit1 = 0;
+int debugbit2 = 0;
+int debugbit4 = 0;
+int debugbit8 = 0;
+
+void setup() {
+  pinMode(bit_1A, INPUT);
+  pinMode(bit_2A, INPUT);
+  pinMode(bit_4A, INPUT);
+  pinMode(bit_8A, INPUT);
+  pinMode(select_0, OUTPUT);
+  pinMode(select_1, OUTPUT);
+  pinMode(select_2, OUTPUT);
+  pinMode(select_3, OUTPUT);
+  Serial.begin(9600);
+}
+
+void loop() {
+  digitvalue = 0;
+  digitalWrite(select_0, LOW);
+  digitalWrite(select_1, LOW);
+  digitalWrite(select_2, LOW);
+  digitalWrite(select_3, HIGH);
+  temp = 0;
+  delay(100);
+  debugbit1 = analogRead(bit_1A);
+  debugbit2 = analogRead(bit_2A);
+  debugbit4 = analogRead(bit_4A);
+  debugbit8 = analogRead(bit_8A);
+  if(digitalRead(bit_1) == HIGH){
+    temp = temp + 1;
+    debugbit1 = 1;
+  }
+  if(digitalRead(bit_2) == HIGH){
+    temp = temp + 2;
+    debugbit2 = 1;
+  }
+  if(digitalRead(bit_4) == HIGH){
+    temp = temp + 4;
+    debugbit4 = 1;
+  }
+  if(digitalRead(bit_8) == HIGH){
+    temp = temp + 8;
+    debugbit8 = 1;
+  }
+  digitvalue = temp;
+  digit1 = temp;
+  Serial.print("Digits are: ");
+  Serial.println(debugbit1);
+  Serial.println(debugbit2);
+  Serial.println(debugbit4);
+  Serial.println(debugbit8);
+/*
+  digitalWrite(select_3, LOW);
+  digitalWrite(select_2, HIGH);
+  temp = 0;
+  delay(1000);
+  if(digitalRead(bit_1) == HIGH){
+    temp = temp + 1;
+  }
+  if(digitalRead(bit_2) == HIGH){
+    temp = temp + 2;
+  }
+  if(digitalRead(bit_4) == HIGH){
+    temp = temp + 4;
+  }
+  if(digitalRead(bit_8) == HIGH){
+    temp = temp + 8;
+  }
+  digitvalue = temp*10;
+  digit2 = temp;
+
+  digitalWrite(select_2, LOW);
+  digitalWrite(select_1, HIGH);
+  delay(1000);
+  temp = 0;
+  if(digitalRead(bit_1) == HIGH){
+    temp = temp + 1;
+  }
+  if(digitalRead(bit_2) == HIGH){
+    temp = temp + 2;
+  }
+  if(digitalRead(bit_4) == HIGH){
+    temp = temp + 4;
+  }
+  if(digitalRead(bit_8) == HIGH){
+    temp = temp + 8;
+  }
+  digitvalue = temp*100;
+  digit3 = temp;
+  
+  digitalWrite(select_1, LOW);
+  digitalWrite(select_0, HIGH);
+  delay(1000);
+  temp = 0;
+  if(digitalRead(bit_1) == HIGH){
+    temp = temp + 1;
+  }
+  if(digitalRead(bit_2) == HIGH){
+    temp = temp + 2;
+  }
+  if(digitalRead(bit_4) == HIGH){
+    temp = temp + 4;
+  }
+  if(digitalRead(bit_8) == HIGH){
+    temp = temp + 8;
+  }
+  digitvalue = temp*1000;
+  Serial.print("The current number is: ");
+  Serial.println(digitvalue);
+  Serial.print("\n Digit 1 is: ");
+  Serial.println(digit1);
+  */
+}
