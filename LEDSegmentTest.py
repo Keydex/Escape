@@ -1,42 +1,49 @@
-import os
-import RPi.GPIO as GPIO
-import time
 
-segments = (2,3,4,17,27,22,10,9,14,15,18)
-GPIO.setmode(GPIO.BCM)
-digits = (7,12,16,20,21)
-for segment in segments:
-    GPIO.setup(segment, GPIO.OUT)
-    GPIO.output(segment, 0)
-for digit in digits:
-    GPIO.setup(digit, GPIO.OUT)
-    GPIO.output(digit, 1)
- 
-num = {' ':(0,0,0,0,0,0,0),
-    '0':(1,1,1,1,1,1,0),
-    '1':(0,1,1,0,0,0,0),
-    '2':(1,1,0,1,1,0,1),
-    '3':(1,1,1,1,0,0,1),
-    '4':(0,1,1,0,0,1,1),
-    '5':(1,0,1,1,0,1,1),
-    '6':(1,0,1,1,1,1,1),
-    '7':(1,1,1,0,0,0,0),
-    '8':(1,1,1,1,1,1,1),
-    '9':(1,1,1,1,0,1,1)}
- 
-try:
-    while True:
-        n = time.ctime()[11:13]+time.ctime()[14:16]
-        s = str(n).rjust(4)
-        for digit in range(4):
-            for loop in range(0,7):
-                GPIO.output(segments[loop], num[s[digit]][loop])
-                if (int(time.ctime()[18:19])%2 == 0) and (digit == 1):
-                    GPIO.output(9, 1)
-                else:
-                    GPIO.output(9, 0)
-            GPIO.output(digits[digit], 0)
-            time.sleep(0.001)
-            GPIO.output(digits[digit], 1)
-finally:
-    GPIO.cleanup()
+#include <Wire.h> // Enable this line if using Arduino Uno, Mega, etc.
+//#include <TinyWireM.h> // Enable this line if using Adafruit Trinket, Gemma, etc.
+
+#include "Adafruit_LEDBackpack.h"
+#include "Adafruit_GFX.h"
+
+Adafruit_7segment matrix = Adafruit_7segment();
+
+void setup() {
+#ifndef __AVR_ATtiny85__
+  Serial.begin(9600);
+  Serial.println("7 Segment Backpack Test");
+#endif
+  matrix.begin(0x70);
+}
+
+void loop() {
+/*
+  // print with print/println
+  for (uint16_t counter = 0; counter < 9999; counter++) {
+    matrix.println(counter);
+    matrix.writeDisplay();
+    delay(10);
+  }
+*/
+  // method #2 - draw each digit
+  uint16_t blinkcounter = 0;
+  boolean drawDots = false;
+  for (uint16_t hour = 59; hour > 0; hour --) {
+    for(uint16_t minutes = 59; minutes > 0; minutes--){
+      matrix.writeDigitNum(0, (hour / 10) % 10, drawDots);
+      matrix.writeDigitNum(1, hour % 10, drawDots);
+      matrix.drawColon(drawDots);
+      matrix.writeDigitNum(3, (minutes / 10) % 10, drawDots);
+      matrix.writeDigitNum(4, minutes % 10, drawDots);
+
+      blinkcounter+=500;
+      if (blinkcounter == 500) {
+        drawDots = false;
+      }else {
+        drawDots = true;
+        blinkcounter = 0;
+      }
+      matrix.writeDisplay();
+      delay(1000);
+    }
+  }
+}
