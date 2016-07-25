@@ -16,7 +16,7 @@ GPIO.setup(6, GPIO.IN, pull_up_down = GPIO.PUD_UP)
 GPIO.setup(13, GPIO.IN, pull_up_down = GPIO.PUD_UP)
 GPIO.setup(19, GPIO.IN, pull_up_down = GPIO.PUD_UP)
 GPIO.setup(26, GPIO.IN, pull_up_down = GPIO.PUD_UP)
-player = OMXPlayer('/home/pi/Documents/Cabin-TIMERonly.mp4')
+player = OMXPlayer('/home/pi/Documents/Cabin-TIMERonly.mp4', ['--no-osd'])
 
 #This code is for debugging purposes, incase system freezes it forces close after 30 seconds
 timeout = time.time() + 30
