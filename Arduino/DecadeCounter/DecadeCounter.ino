@@ -1,4 +1,3 @@
-
 int sensorPin1 = A0;    // select the input pin for the potentiometer
 int sensorPin2 = A1;    // select the input pin for the potentiometer
 int sensorPin3 = A2;    // select the input pin for the potentiometer
@@ -50,6 +49,8 @@ void setup() {
   pinMode(A1, INPUT);
   pinMode(A2, INPUT);
   pinMode(A3, INPUT);
+  pinMode(A5, OUTPUT);
+  digitalWrite(A5, LOW);
 }
 
 void loop() {
@@ -135,6 +136,7 @@ void loop() {
 
   if(combo3_curr == combo3_soln && combo2_curr == combo2_soln && combo1_curr == combo1_soln){
     Serial.print("Solution is Correct!");
+    digitalWrite(A5, HIGH);
   }
   else{
     Serial.print("Solution is Incorrect!");
@@ -162,10 +164,10 @@ int ForceLow(){
 
 int RetrieveValue(int sensoradjust){
   int tempdata = 0;
-  sensorValue1 = analogRead(A0);
-  sensorValue2 = analogRead(A1);
-  sensorValue3 = analogRead(A2);
-  sensorValue4 = analogRead(A3);
+  sensorValue1 = analogRead(sensorPin1);
+  sensorValue2 = analogRead(sensorPin2);
+  sensorValue3 = analogRead(sensorPin3);
+  sensorValue4 = analogRead(sensorPin4);
   if(sensorValue1 > sensoradjust){
     tempdata = tempdata + 1;
   }
