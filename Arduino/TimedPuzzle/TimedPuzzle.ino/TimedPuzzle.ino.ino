@@ -4,7 +4,7 @@
 void setup (){
 
   Serial.begin(9600);
-    pinMode(13, OUTPUT);
+  pinMode(13, OUTPUT);
 //    pinMode(3, OUTPUT)
   pinMode(8, INPUT_PULLUP);
 //  pinMode(1, INPUT_PULLUP);
@@ -15,12 +15,13 @@ void setup (){
   pinMode(5, INPUT_PULLUP);
 }
 
-unsigned long timestamp = 0; // FOR TIMER
-unsigned long timestamp2 = 0;
-unsigned long elapsedTime;
-int elapsedTime2;
-int temp = 0;
-unsigned long currtime = 0;
+int timetosolve = 50; //Amount of time given to solve puzzle in seconds
+
+
+//Variables to control Timer
+int puzzletimer = timetosolve * 100; //Convert time to miliseconds
+int currtime = -1;
+int debugdelay = 200;
 
 //Bool sequence for actions
 int buttonstart = FALSE;
@@ -33,85 +34,74 @@ int PuzzleSolved = FALSE;
 
 void loop(){
   //Serial.print("Access Loop!\n");
-  
-  if(SystemResetTest() == FALSE && currtime == 0){     //If the system is not reset, stay Red
-        Serial.print('\n');
-        Serial.print("Too Slow!");
+
+  if(SystemResetTest() == FALSE){     //If the system is not reset, stay Red
+        if(currtime == puzzletimer){
+          Serial.print('\n');
+          Serial.print("Too Slow!");
+        }
         SystemLockOut();
   }
   
   if (digitalRead(8) == LOW){          //System is Reset, Start Sequence with Button Press
-    Serial.print("It entered here!");
+    Serial.print("\n ShutDown Sequence Initiated \n");
     currtime = 0;
     delay(200);
-    while(currtime < 5000){ //5000 = 50 seconds
-        if(digitalRead(2) == HIGH && powerglove == FALSE && usb == FALSE && buttonsequence == FALSE){
-          breaker = TRUE;
-          Serial.print("Step 1 is TRUE! \n");
-          if(digitalRead(2) == HIGH && breaker == TRUE && usb == FALSE && buttonsequence == FALSE){
-            powerglove = TRUE;
-            Serial.print("Step 2 is TRUE! \n");
-            if(digitalRead(3) == HIGH && breaker == TRUE && usb == FALSE && buttonsequence == FALSE && powerglove == TRUE){
-              usb = TRUE;
-              Serial.print("Step 3 is TRUE! \n");
-                if(digitalRead(4) == HIGH && breaker == TRUE && usb == TRUE && powerglove == TRUE){
-//                          digitalWrite(5, HIGH);
-                          Serial.print('\n');
-                          Serial.print("You Did it in ");
-                          Serial.println(currtime/100);
-                          Serial.print(" seconds!");
+    while(currtime < puzzletimer){ //5000 = 50 seconds
+        IncrementTime();
+          breaker = !digitalRead(2);
+          powerglove = !digitalRead(3);
+          usb = !digitalRead(4);
+          buttonsequence = !digitalRead(5);
+        if(digitalRead(2) == LOW && powerglove == FALSE && usb == FALSE && buttonsequence == FALSE){
+          Serial.print("\n Step 1 Solved! \n");
+            while(digitalRead(2) == LOW && currtime < puzzletimer){
+              if(digitalRead(3) == LOW){
+                Serial.print("\n Step 2 Solved!");
+                while(digitalRead(3) == LOW && currtime < puzzletimer){
+                  if(digitalRead(4) == LOW){
+                    Serial.print("\n Step 3 Solved!");
+                    while(digitalRead(4) == LOW && currtime < puzzletimer){
+                      if(digitalRead(5) == LOW){
+                        Serial.print("ShutDown Complete \n");
+                      }
+                      else{
+                        IncrementTime();
+                      }
+                    }
+                  }
+                IncrementTime();
                 }
-                else{
-                  PuzzleSolved = FALSE;
-                  Serial.print("Step 4 is FALSE! \n");
-                }
-            }
-            else{
-              usb = FALSE;
-              Serial.print("Step 3 is FALSE!");
+              }
+            IncrementTime();
             }
           }
-          else{
-            powerglove = FALSE;
-            Serial.print("Step 2 is FALSE! \n");
-          }
-        }
-        else{
-          breaker = FALSE;
-          Serial.print("Step 1 is FALSE! \n");
-        }
-      if(currtime%100 == 1){  //Literally here to make timer look nicer
-      Serial.print('\n');
-      Serial.println(currtime/100);
-      Serial.print(" seconds");
-      }
-      currtime++;
-      delay(10);  //Delay 10 ms
    }
-   Serial.print('\n');
-   Serial.print("We are looping");
 }
 }
 int SystemResetTest(){
   delay(500);
-  breaker = digitalRead(2);
-  powerglove = digitalRead(3);
-  usb = digitalRead(4);
-  buttonsequence = digitalRead(5);
+  breaker = !digitalRead(2);
+  powerglove = !digitalRead(3);
+  usb = !digitalRead(4);
+  buttonsequence = !digitalRead(5);
   if(breaker == FALSE && powerglove == FALSE && usb == FALSE && buttonsequence == FALSE){
-    Serial.print("System test is True \n");
-    Serial.println(breaker);
+    Serial.print("Shutdown Sequence Ready To Begin \n");
+/*    Serial.println(breaker);
     Serial.println(powerglove);
     Serial.println(usb);
     Serial.println(buttonsequence);
+    */
     return TRUE;
   }
   else{
-    Serial.print("System test is False \n");
+    Serial.print("System has not been Reset! \n");
+    /*
     Serial.println(breaker);
     Serial.println(powerglove);
     Serial.println(usb);
     Serial.println(buttonsequence);
+    */
     return FALSE;
   }
 }
@@ -124,3 +114,13 @@ void SystemLockOut(){
     }
 }
 
+void IncrementTime(){
+      if(currtime%100 == 1){  //Literally here to make timer look nicer
+      Serial.print('\n');
+      Serial.println(currtime/100);
+      Serial.print(" seconds");
+      }
+      currtime++;
+      delay(10);  //Delay 10 ms
+      return;
+}
