@@ -30,29 +30,27 @@ void setup (){
 
 int timetosolve = 50; //Amount of time given to solve puzzle in seconds
 
-
 //Variables to control Timer
 int puzzletimer = timetosolve * 100; //Convert time to miliseconds
 int currtime = -1;
 int debugdelay = 200;
 
 //Bool sequence for actions
-int buttonstart = FALSE;
-int buttonend = FALSE;
-int breaker = FALSE;
-int powerglove = FALSE;
-int usb = FALSE;
-int buttonsequence1 = FALSE;
-int buttonsequence2 = FALSE;
-int buttonsequence3 = FALSE;
-int PuzzleSolved = FALSE;
+int buttonstart = FALSE;      //Digital 2
+int breaker = FALSE;          //Digital 3
+int powerglove = FALSE;       //Digital 4
+int usb = FALSE;              //Digital 5
+int buttonseq1 = FALSE;  //Digital 6
+int buttonseq2 = FALSE;  //Digital 7
+int buttonseq3 = FALSE;  //Digital 8
+int buttonend = FALSE;        //Digital 9
+int PuzzleSolved = FALSE;     //Use if boolean needed for win
+int sequenceBroken = FALSE;
+
+//Varialbes to test button sequence
+const int startTrigger = 2 + 1;   //Insert Button that Starts Sequence + 1
 
 void loop(){
-  //Serial.print("Access Loop!\n");
-      for(int i = 0; i < NUMPIXELS; i++){
-      strip.setPixelColor(i, 255, 255, 255);
-      strip.show();
-    }
 
   if(SystemResetTest() == FALSE){     //If the system is not reset, stay Red
         if(currtime == puzzletimer){
@@ -62,74 +60,88 @@ void loop(){
         SystemLockOut();
   }
   
-  if (digitalRead(8) == LOW){          //System is Reset, Start Sequence with Button Press
+  if (digitalRead(2) == LOW){          //System is Reset, Start Sequence with Button Press
+    SetNeoPixel(blue);
     Serial.print("\n ShutDown Sequence Initiated \n");
     currtime = 0;                           //Reset Timer
     delay(200);
-    while(currtime < puzzletimer){ //5000 = 50 seconds
-      SetNeoPixel(white);
+     while(currtime < puzzletimer){         //Checks to see if time runs out
         IncrementTime();                    //Increments time
-          breaker = !digitalRead(2);        //Checks to make sure All switches are Off
-          powerglove = !digitalRead(3);
-          usb = !digitalRead(4);
-          buttonsequence1 = !digitalRead(5);
-          buttonsequence2 = !digitalRead(6);
-          buttonsequence3 = !digitalRead(7);
-        if(digitalRead(2) == LOW && powerglove == FALSE && usb == FALSE && buttonsequence1 == FALSE && buttonsequence2 == FALSE && buttonsequence3 == FALSE){
-          Serial.print("\n Step 1 Solved! \n");
-            while(digitalRead(2) == LOW && currtime < puzzletimer){
-              if(digitalRead(3) == LOW){
-                Serial.print("\n Step 2 Solved!");
-                while(digitalRead(3) == LOW && currtime < puzzletimer){
-                  if(digitalRead(4) == LOW){
-                    Serial.print("\n Step 3 Solved!");
-                    while(digitalRead(4) == LOW && currtime < puzzletimer){
-                      if(digitalRead(5) == LOW){
-                        SetNeoPixel(green);
-                        Serial.print("ShutDown Complete \n");
-                      }
-                      else{
-                        IncrementTime();    //Used to make sure time is still checked while in loop
-                      }
-                    }
-                  }
-                IncrementTime();
-                }
-              }
-            IncrementTime();
-            }
-          }
-   }
+        breaker = !digitalRead(3);          //Checks to make sure All switches are Off
+        powerglove = !digitalRead(4);
+        usb = !digitalRead(5);
+        buttonseq1 = FALSE;
+        buttonseq2 = FALSE;
+        buttonseq3 = FALSE;
+        sequenceBroken = FALSE;             //Resets sequence
+        if(breaker == TRUE && powerglove == FALSE && usb == FALSE && buttonseq1 == FALSE && buttonseq2 == FALSE && buttonseq3 == FALSE){
+        PuzzleNextStep(3,4);
+        }
+    }
+  }
 }
-}
-int SystemResetTest(){
-  breaker = !digitalRead(2);
-  powerglove = !digitalRead(3);
-  usb = !digitalRead(4);
-  buttonsequence1 = !digitalRead(5);
-  if(breaker == FALSE && powerglove == FALSE && usb == FALSE && buttonsequence1 == FALSE){
+int SystemResetTest(){              //Function to test if system has been reset
+  breaker = !digitalRead(3);
+  powerglove = !digitalRead(4);
+  usb = !digitalRead(5);
+  buttonseq1 = !digitalRead(6);
+  buttonseq2 = !digitalRead(7);
+  buttonseq3 = !digitalRead(8);
+  if(breaker == FALSE && powerglove == FALSE && usb == FALSE && buttonseq1 == FALSE && buttonseq2 == FALSE && buttonseq3 == FALSE){
     Serial.print("Shutdown Sequence Ready To Begin \n");
     SetNeoPixel(yellow);
-/*    Serial.println(breaker);
-    Serial.println(powerglove);
-    Serial.println(usb);
-    Serial.println(buttonsequence);
-    */
-    return TRUE;
+    return TRUE;      //If all true system has been reset successfully
   }
   else{
-    Serial.print("System has not been Reset! \n");
-    /*
-    Serial.println(breaker);
-    Serial.println(powerglove);
-    Serial.println(usb);
-    Serial.println(buttonsequence);
-    */
-    return FALSE;
+    return FALSE;     //System has not been reset
   }
 }
 
-void SystemLockOut(){
+void PuzzleNextStep(int previousTrigger, int currentTrigger){   //Creates a loop for the next Trigger
+  if(currentTrigger > 3){
+    Serial.print("\n Step ");
+    Serial.println(currentTrigger - 3);
+    Serial.print(" Solved! \n");
+  }
+  if(currentTrigger == 7){
+    YouWin();
+  }
+  while(digitalRead(previousTrigger) == LOW && currtime < puzzletimer && sequenceBroken == FALSE){  //If previousTrigger is start, ignore previous check
+    if(digitalRead(currentTrigger) == LOW){
+      PuzzleNextStep(currentTrigger, currentTrigger + 1);
+    }
+    IncrementTime();
+    if(CheckSwitchOrder(previousTrigger) == FALSE){
+      return;
+    }
+  }
+  return;
+}
+
+int CheckSwitchOrder(int checkStep){    //Checks if user broke puzzle up to the current step
+  for(int i = startTrigger; i < checkStep; i++){
+    if(!digitalRead(i) == FALSE){
+      Serial.print("The sequence is broken \n");
+      Serial.println(i);
+      sequenceBroken = TRUE;
+      return FALSE;               //The puzzle sequence is broken, force exit loop
+    }
+    else{
+      Serial.print("The sequence is okay \n");
+      return TRUE;                //Puzzle sequence is good
+    }
+  }
+}
+
+void YouWin(){      //Well They Won
+  while(TRUE){              //Stay in Loop until Arduino is force reset
+      SetNeoPixel(green);
+      Serial.print("ShutDown Complete \n");
+      //TO-DO INSERT CODE TO TELL RASPBERRY THAT GAME HAS COMPLETED
+  }
+}
+
+void SystemLockOut(){                   //Function for when system is locked out
     while(SystemResetTest() == FALSE){
       SetNeoPixel(red);
       Serial.print("System is Currently Locked Out \n");
@@ -137,7 +149,7 @@ void SystemLockOut(){
     }
 }
 
-void IncrementTime(){
+void IncrementTime(){                   //Function to check time
       if(currtime%100 == 1){  //Literally here to make timer look nicer
       Serial.print('\n');
       Serial.println(currtime/100);
@@ -148,34 +160,35 @@ void IncrementTime(){
       return;
 }
 
-void SetNeoPixel(int color){
+void SetNeoPixel(int color){          //Function to set NeoPixel Color
+  delay(500);                         //Prevent Pixels from Constantly Updated
   if(color == red){
     for(int i = 0; i < NUMPIXELS; i++){
-      strip.setPixelColor(i, 255, 0, 0);
+      strip.setPixelColor(i, strip.Color(255, 0, 0));
       strip.show();
     }
   }
   else if(color == blue){
     for(int i = 0; i < NUMPIXELS; i++){
-      strip.setPixelColor(i, 0, 0, 255);
+      strip.setPixelColor(i, strip.Color(0, 0, 255));
       strip.show();
     }
   }
   else if(color == green){
     for(int i = 0; i < NUMPIXELS; i++){
-      strip.setPixelColor(i, 0, 255, 0);
+      strip.setPixelColor(i, strip.Color(0, 255, 0));
       strip.show();
     }
   }
   else if(color == white){
     for(int i = 0; i < NUMPIXELS; i++){
-      strip.setPixelColor(i, 255, 255, 255);
+      strip.setPixelColor(i, strip.Color(255,255,255));
       strip.show();
     }
   }
   else if(color == yellow){
     for(int i = 0; i < NUMPIXELS; i++){
-      strip.setPixelColor(i, 255, 255, 0);
+      strip.setPixelColor(i, strip.Color(255, 150, 0));
       strip.show();
     }  
   }
