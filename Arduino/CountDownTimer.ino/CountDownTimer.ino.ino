@@ -42,13 +42,13 @@ void loop() {
 }
 
 void CountDown(){
-    for (uint16_t hour = 59; hour > 0; hour --) {
-    for(uint16_t minutes = 59; minutes > 0; minutes--){
-      matrix.writeDigitNum(0, (hour / 10) % 10, drawDots);
-      matrix.writeDigitNum(1, hour % 10, drawDots);
+    for (uint16_t minutes = 59; minutes > 0; minutes --) {
+    for(uint16_t seconds = 59; seconds > 0; seconds--){
+      matrix.writeDigitNum(0, (minutes / 10) % 10, drawDots);
+      matrix.writeDigitNum(1, minutes % 10, drawDots);
       matrix.drawColon(drawDots);
-      matrix.writeDigitNum(3, (minutes / 10) % 10, drawDots);
-      matrix.writeDigitNum(4, minutes % 10, drawDots);
+      matrix.writeDigitNum(3, (seconds / 10) % 10, drawDots);
+      matrix.writeDigitNum(4, seconds % 10, drawDots);
 
       blinkcounter+=500;
       if (blinkcounter == 500) {
