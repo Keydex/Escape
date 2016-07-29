@@ -7,7 +7,7 @@
 #ifdef __AVR__
   #include <avr/power.h>
 #endif
-#define PIN 9
+#define PIN 13
 #define NUMPIXELS 30
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
@@ -23,7 +23,7 @@ void setup (){
   for(int i = 2; i < 9; i++){     //Initialize pin 2 to 8
       pinMode(i, INPUT_PULLUP);
   }
-  pinMode(9, OUTPUT);
+  pinMode(PIN, OUTPUT);
   strip.begin();
   strip.show();
 }
@@ -70,8 +70,8 @@ void loop(){
         breaker = !digitalRead(3);          //Checks to make sure All switches are Off
         powerglove = !digitalRead(4);
         usb = !digitalRead(5);
-        buttonseq1 = FALSE;
-        buttonseq2 = FALSE;
+        buttonseq1 = !digitalRead(6);
+        buttonseq2 = !digitalRead(7);
         buttonseq3 = FALSE;
         sequenceBroken = FALSE;             //Resets sequence
         if(breaker == TRUE && powerglove == FALSE && usb == FALSE && buttonseq1 == FALSE && buttonseq2 == FALSE && buttonseq3 == FALSE){
@@ -86,7 +86,13 @@ int SystemResetTest(){              //Function to test if system has been reset
   usb = !digitalRead(5);
   buttonseq1 = !digitalRead(6);
   buttonseq2 = !digitalRead(7);
-  buttonseq3 = !digitalRead(8);
+  buttonseq3 = FALSE;
+  Serial.println(breaker);
+  Serial.println(powerglove);
+  Serial.println(usb);
+  Serial.println(buttonseq1);
+  Serial.println(buttonseq2);
+  Serial.println(buttonseq3);
   if(breaker == FALSE && powerglove == FALSE && usb == FALSE && buttonseq1 == FALSE && buttonseq2 == FALSE && buttonseq3 == FALSE){
     Serial.print("Shutdown Sequence Ready To Begin \n");
     SetNeoPixel(yellow);
@@ -103,7 +109,7 @@ void PuzzleNextStep(int previousTrigger, int currentTrigger){   //Creates a loop
     Serial.println(currentTrigger - 3);
     Serial.print(" Solved! \n");
   }
-  if(currentTrigger == 7){
+  if(currentTrigger == 9){
     YouWin();
   }
   while(digitalRead(previousTrigger) == LOW && currtime < puzzletimer && sequenceBroken == FALSE){  //If previousTrigger is start, ignore previous check
@@ -128,6 +134,7 @@ int CheckSwitchOrder(int checkStep){    //Checks if user broke puzzle up to the 
     }
     else{
       Serial.print("The sequence is okay \n");
+      Serial.println(checkStep);
       return TRUE;                //Puzzle sequence is good
     }
   }
