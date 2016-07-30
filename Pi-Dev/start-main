@@ -17,6 +17,8 @@ GPIO.setup(6, GPIO.IN, pull_up_down = GPIO.PUD_UP)#Force Lose Button
 GPIO.setup(13, GPIO.IN, pull_up_down = GPIO.PUD_UP)#Force Win Button
 GPIO.setup(19, GPIO.IN, pull_up_down = GPIO.PUD_UP)#Start Game Button
 GPIO.setup(26, GPIO.IN, pull_up_down = GPIO.PUD_UP)#Force Back to Loop (Or reset Game)
+GPIO.setup(11, GPIO.IN, pull_up_down = GPIO.PUD_UP)#The Red Button
+GPIO.setup(9, GPIO.IN, pull_up_down = GPIO.PUD_UP)#The Door
 
 #Dmx Output
 GPIO.setup(14, GPIO.OUT)#Used for DMX Trigger White
@@ -37,14 +39,32 @@ GPIO.output(24, 0)
 GPIO.output(25, 0)
 GPIO.output(8, 0)
 
-GPIO.setup(2, GPIO.IN)#Arduino To Pi to tell time is up
+#Clock Arduino to Pi connections
+#Note that if 2 and 3 are both on, that means the game win is triggered
+GPIO.setup(2, GPIO.IN)#Arduino To Pi to tell time is up Pin 6
+GPIO.setup(3, GPIO.IN)#Arduino to Pi 9:55 trigger Pin 7
 
 #player = OMXPlayer('/home/pi/Documents/Technoscape-GameReady3.mp4', ['--no-osd'])#Uncomment this to use with no timer
 player = OMXPlayer('/home/pi/Documents/Technoscape-GameReady3.mp4') #Used for debugging
 
-wintime = 4032
-losetime = 3960
+winStart_time = 4032
+winEnd_time = 4110
+loseStart_time = 3900
+loseEnd_time = 3920#1:05:20
+redbuttonStart_time = 4315
+redbuttonEnd_time = 4345
+chamberStart_time = 4624
+RedAllowTalk = 4702#This is used to give time when Red button is allowed to be Pressed
+tenminStart_time = 3305
 arduino_delay = 2#Second Delay to bring arduino data pin High
+
+#The Check Functions Prevent people from triggering them twice
+resetCheck = False
+doorCheck = False
+redCheck = False
+endCheck = False
+startCheck = False
+startTime = 0
 try:
     while True:
         button_quit = GPIO.input(5)
@@ -52,9 +72,18 @@ try:
         button_win = GPIO.input(13)
         button_start = GPIO.input(19)
         button_loop = GPIO.input(26)
-        time_trigger = GPIO.input(2)
-        player.play()
-        if (button_loop == False):
+        button_RED = GPIO.input(11)
+        door_Switch = GPIO.input(9)
+        trigger_END = GPIO.input(2)
+        trigger_WIN = GPIO.input(3)
+        player.play()#This is in the while loop. But it doesn't reset the video. Strange'
+        currentTime = time.time()
+        if (button_loop == False or resetCheck == True):
+            resetCheck = False
+            doorCheck = False
+            redCheck = False
+            endCheck = False
+            startCheck = False
             print('Loop Trigger by GameMaster')
             #       cuFunctions.loopvideo(player())
             GPIO.output(24, 1)
@@ -67,9 +96,10 @@ try:
                 if (player.position() > 300):#Seconds until the system loops back to 0
                     print('Loop Triggered by System')
                     player.set_position(0)
-                    print('Error Code #A03')
                 if (button_start == False):#When start pressed, game starts, then break out of loopvideo function
                     print('Game Start Triggered by GameMaster')
+                    startTime = time.time()
+                    startCheck = True
                     player.set_position(301)
                     GPIO.output(25, 1)
                     time.sleep(arduino_delay)
@@ -80,6 +110,8 @@ try:
                     cuFunctions.killall()
         if (button_start == False):
             print('Game Start by GameMaster')
+            startTime = time.time()
+            startCheck = True
             player.set_position(301)
             GPIO.output(25, 1)
             time.sleep(arduino_delay)
@@ -87,22 +119,58 @@ try:
             time.sleep(.2)
         if (button_win == False):
             print('Win Trigger by GameMaster')
-            player.set_position(wintime) #Jump to Win Time, 1:10
+            player.set_position(winStart_time)
+            GPIO.output(23, 1)
+            time.sleep(arduino_delay)
+            GPIO.output(23, 0)
+            doorCheck = True
+            redCheck = True
+            endCheck = True
+            time.sleep(.2)
+        if (trigger_WIN == True):
+            print('Win Trigger by Last Puzzle')
+            player.set_position(winStart_time)
             GPIO.output(23, 1)
             time.sleep(arduino_delay)
             GPIO.output(23, 0)
             time.sleep(.2)
         if (button_lose == False):
             print('Lose Trigger by GameMaster')
-            player.set_position(losetime) #Jump to Lose Time, 1:20
+            player.set_position(loseStart_time)
             GPIO.output(8, 1)
             time.sleep(arduino_delay)
             GPIO.output(8, 0)
+            doorCheck = True
+            redCheck = True
+            endCheck = True
             time.sleep(.2)
-        if (time_trigger == True):
+        if (button_RED == False and redCheck == False and player.position() > RedAllowTalk):
+            print('THEY PRESSED THE RED BUTTON')
+            tempTime = player.position()
+            player.set_position(redbuttonStart_time)
+            redCheck = True
+            time.sleep(30)
+            player.set_position(tempTime)
+        if (trigger_END == True):
             print('Lose Trigger by Clock')
-            player.set_position(losetime)
+            player.set_position(loseStart_time)
             time.sleep(2)#This is two seconds to make sure the one second arduino trigger can be set to low
+        if (door_Switch == False and doorCheck == False):#Makes sure that jumping here only triggers once
+             print('Door Switch Triggered, Entering Chamber Video')
+             player.set_position(chamberStart_time)
+             doorCheck = True
+             time.sleep(.2)
+        if (player.position() > loseEnd_time and player.position() < (loseEnd_time + 4)):#Resets Game to intro
+             print('Video (LOSE) Ended, Resetting Back to Intro')
+             resetCheck = True#Make sure that it only resets once
+        if (player.position() > winEnd_time and player.position() < (winEnd_time + 4)):
+             print('Video (WIN) Ended, Resetting Back to Intro')
+             resetCheck = True
+        if ((currentTime - startTime) > 3000 and endCheck == False and startCheck == True):#If 50 minutes pass jump to ten minute segment
+            print('Ten Minutes Remaining by Raspberry')
+            player.set_position(tenminStart_time)
+            endCheck = True
+            time.sleep(.2)
         if (button_quit == False):
             cuFunctions.killall()
             print('Force Close by GameMaster')
