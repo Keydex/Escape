@@ -11,13 +11,40 @@ os.system('sudo killall omxplayer.bin')
 
 GPIO.setmode(GPIO.BCM)
 
-GPIO.setup(5, GPIO.IN, pull_up_down = GPIO.PUD_UP)
-GPIO.setup(6, GPIO.IN, pull_up_down = GPIO.PUD_UP)
-GPIO.setup(13, GPIO.IN, pull_up_down = GPIO.PUD_UP)
-GPIO.setup(19, GPIO.IN, pull_up_down = GPIO.PUD_UP)
-GPIO.setup(26, GPIO.IN, pull_up_down = GPIO.PUD_UP)
-#player = OMXPlayer('/home/pi/Documents/Technoscape-GameReady3.mp4', ['--no-osd'])
-player = OMXPlayer('/home/pi/Documents/Technoscape-GameReady3.mp4')
+#Button Triggers and Manual Overrides
+GPIO.setup(5, GPIO.IN, pull_up_down = GPIO.PUD_UP)#Force quit Program Button
+GPIO.setup(6, GPIO.IN, pull_up_down = GPIO.PUD_UP)#Force Lose Button
+GPIO.setup(13, GPIO.IN, pull_up_down = GPIO.PUD_UP)#Force Win Button
+GPIO.setup(19, GPIO.IN, pull_up_down = GPIO.PUD_UP)#Start Game Button
+GPIO.setup(26, GPIO.IN, pull_up_down = GPIO.PUD_UP)#Force Back to Loop (Or reset Game)
+
+#Dmx Output
+GPIO.setup(14, GPIO.OUT)#Used for DMX Trigger White
+GPIO.setup(15, GPIO.OUT)#Used for DMX Trigger RED
+GPIO.setup(18, GPIO.OUT)#DMX Placeholder, not in use
+GPIO.output(14, 0)
+GPIO.output(15, 0)
+GPIO.output(18, 0)
+
+#Clock I/O
+GPIO.setup(23, GPIO.OUT)#Tells clock that game is finished
+GPIO.setup(24, GPIO.OUT)#Tells clock the game time can be reset
+GPIO.setup(25, GPIO.OUT)#Tells clock the game can start
+GPIO.setup(8, GPIO.OUT)#Tells Arduino that the Game Master Force Trigger Lose
+
+GPIO.output(23, 0)
+GPIO.output(24, 0)
+GPIO.output(25, 0)
+GPIO.output(8, 0)
+
+GPIO.setup(2, GPIO.IN)#Arduino To Pi to tell time is up
+
+#player = OMXPlayer('/home/pi/Documents/Technoscape-GameReady3.mp4', ['--no-osd'])#Uncomment this to use with no timer
+player = OMXPlayer('/home/pi/Documents/Technoscape-GameReady3.mp4') #Used for debugging
+
+wintime = 4032
+losetime = 3960
+arduino_delay = 2#Second Delay to bring arduino data pin High
 try:
     while True:
         button_quit = GPIO.input(5)
@@ -25,11 +52,15 @@ try:
         button_win = GPIO.input(13)
         button_start = GPIO.input(19)
         button_loop = GPIO.input(26)
+        time_trigger = GPIO.input(2)
         player.play()
         if (button_loop == False):
             print('Loop Trigger by GameMaster')
             #       cuFunctions.loopvideo(player())
+            GPIO.output(24, 1)
             player.set_position(0)
+            time.sleep(arduino_delay)
+            GPIO.output(24,0)
             while(True):
                 button_start = GPIO.input(19)#WHY DOES THIS HAVE TO BE HERE? HOLY CRAP
                 button_quit = GPIO.input(5)
@@ -40,6 +71,9 @@ try:
                 if (button_start == False):#When start pressed, game starts, then break out of loopvideo function
                     print('Game Start Triggered by GameMaster')
                     player.set_position(301)
+                    GPIO.output(25, 1)
+                    time.sleep(arduino_delay)
+                    GPIO.output(25, 0)
                     time.sleep(.2)
                     break#Break Wroks, use return for function Def
                 if (button_quit == False):
@@ -47,20 +81,32 @@ try:
         if (button_start == False):
             print('Game Start by GameMaster')
             player.set_position(301)
+            GPIO.output(25, 1)
+            time.sleep(arduino_delay)
+            GPIO.output(25, 0)
             time.sleep(.2)
         if (button_win == False):
             print('Win Trigger by GameMaster')
-            player.set_position(4032) #Jump to Win Time, 1:10
+            player.set_position(wintime) #Jump to Win Time, 1:10
+            GPIO.output(23, 1)
+            time.sleep(arduino_delay)
+            GPIO.output(23, 0)
             time.sleep(.2)
         if (button_lose == False):
             print('Lose Trigger by GameMaster')
-            player.set_position(3960) #Jump to Lose Time, 1:20
+            player.set_position(losetime) #Jump to Lose Time, 1:20
+            GPIO.output(8, 1)
+            time.sleep(arduino_delay)
+            GPIO.output(8, 0)
             time.sleep(.2)
+        if (time_trigger == True):
+            print('Lose Trigger by Clock')
+            player.set_position(losetime)
+            time.sleep(2)#This is two seconds to make sure the one second arduino trigger can be set to low
         if (button_quit == False):
             cuFunctions.killall()
             print('Force Close by GameMaster')
             break
-        print('Code Terminated')
 finally:
     print('System Exit via GameMaster or Error')
     os.system('sudo killall omxplayer.bin')
