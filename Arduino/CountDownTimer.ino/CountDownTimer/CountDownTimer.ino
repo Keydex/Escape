@@ -18,7 +18,7 @@ void setup() {
   pinMode(sensorPin1, INPUT);//Start Time GPIO 25
   pinMode(sensorPin2, INPUT);//Reset Time GPIO 24
   pinMode(sensorPin3, INPUT);//Win Game GPIO 23
-  pinMode(sensorPin4, INPUT);//Force Lose Game GPIO 8
+  pinMode(sensorPin4, INPUT);//Force Lose Game GPIO 7
   pinMode(6, OUTPUT);//Tells raspberry Game has ended GPIO 2
   matrix.begin(0x70);
 }
@@ -26,13 +26,54 @@ void setup() {
 void loop() {
   uint16_t blinkcounter = 0;
   boolean drawDots = false;
-  
+    Serial.println(sensorPin1);  
   if(analogRead(sensorPin1) > 500){
+
   	CountDown();
   }
   else{
 	PrintTime(60, 00);
    }
+}
+
+void WinStop(int finalminute, int finalsecond){//Flashes current finish time
+  while(1){
+      if(analogRead(sensorPin2) > 500){//If raspberry requests reset, then return
+        return;
+      }
+        blinkcounter+=500;
+        if (blinkcounter == 500) {
+    PrintTime(finalminute, finalsecond);
+    drawDots = false;
+        }else {
+    PrintTime(0, 0)
+    drawDots = true;
+    blinkcounter = 0;
+        }
+        matrix.writeDisplay();
+        delay(1012);
+      }
+  }
+}
+
+void LoseStop(){//Flashes Dead, because they lost
+  delay(1000);
+  digitalWrite(6, LOW);
+  while(1){
+      if(analogRead(sensorPin2) > 500){//If raspberry requests reset, then return
+        return;
+      }
+       blinkcounter+=500;
+        if (blinkcounter == 500) {
+    matrix.print(0xDEAD, HEX);
+    matrix.writeDisplay();
+    drawDots = false;
+        }else {
+    drawDots = true;
+    blinkcounter = 0;
+        }
+        delay(1012);
+  }
 }
 
 void CountDown(){
@@ -56,45 +97,6 @@ void CountDown(){
 	}
 }
 
-void WinStop(int finalminute, int finalsecond){//Flashes current finish time
-	while(1){
-  		if(analogRead(sensorPin2) > 500){//If raspberry requests reset, then return
-  			return;
-  		}
-	      blinkcounter+=500;
-	      if (blinkcounter == 500) {
-		PrintTime(finalminute, finalsecond);
-		drawDots = false;
-	      }else {
-		PrintTime(0, 0)
-		drawDots = true;
-		blinkcounter = 0;
-	      }
-	      matrix.writeDisplay();
-	      delay(1012);
-	    }
-	}
-}
-
-void LoseStop(){//Flashes Dead, because they lost
-	delay(1000);
-	digitalWrite(6, LOW);
-  while(1){
-  		if(analogRead(sensorPin2) > 500){//If raspberry requests reset, then return
-  			return;
-  		}
-	     blinkcounter+=500;
-	      if (blinkcounter == 500) {
-		matrix.print(0xDEAD, HEX);
-		matrix.writeDisplay();
-		drawDots = false;
-	      }else {
-		drawDots = true;
-		blinkcounter = 0;
-	      }
-	      delay(1012);
-  }
-}
 
 void PrintTime(int minutes, int seconds){//Function to print current time to segments
         matrix.writeDigitNum(0, (minutes / 10) % 10, drawDots);

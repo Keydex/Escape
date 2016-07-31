@@ -24,11 +24,13 @@ void setup (){
       pinMode(i, INPUT_PULLUP);
   }
   pinMode(PIN, OUTPUT);
+  pinMode(10, OUTPUT);//Used to tell raspberry that the game is won
+  digitalWrite(10, LOW);
   strip.begin();
   strip.show();
 }
 
-int timetosolve = 50; //Amount of time given to solve puzzle in seconds
+int timetosolve = 30; //Amount of time given to solve puzzle in seconds
 
 //Variables to control Timer
 int puzzletimer = timetosolve * 100; //Convert time to miliseconds
@@ -141,10 +143,12 @@ int CheckSwitchOrder(int checkStep){    //Checks if user broke puzzle up to the 
 }
 
 void YouWin(){      //Well They Won
+  digitalWrite(10, HIGH);
+  SetNeoPixel(green);
+  delay(1000);
+  digitalWrite(10,LOW);
   while(TRUE){              //Stay in Loop until Arduino is force reset
-      SetNeoPixel(green);
       Serial.print("ShutDown Complete \n");
-      //TO-DO INSERT CODE TO TELL RASPBERRY THAT GAME HAS COMPLETED
   }
 }
 
