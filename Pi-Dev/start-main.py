@@ -157,7 +157,7 @@ try:
         if ((currentTime - startTime) > 3600 and finalCheck == False and startCheck == True):
              print('Game end Trigger by Raspberry Clock')
              player.set_position(loseStart_time)
-             finalCheck == True
+             finalCheck = True
              time.sleep(.2)
         if (button_quit == False):
             cuFunctions.killall()
