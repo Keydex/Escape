@@ -5,6 +5,7 @@ import os
 import RPi.GPIO as GPIO
 import time
 import cuFunctions
+import logging
 from omxplayer import OMXPlayer
 #allows to kill omxplayer process in case of crash
 os.system('sudo killall omxplayer.bin')
@@ -19,6 +20,8 @@ GPIO.setup(19, GPIO.IN, pull_up_down = GPIO.PUD_UP)#Start Game Button
 GPIO.setup(26, GPIO.IN, pull_up_down = GPIO.PUD_UP)#Force Back to Loop (Or reset Game)
 GPIO.setup(11, GPIO.IN, pull_up_down = GPIO.PUD_UP)#The Red Button
 GPIO.setup(9, GPIO.IN, pull_up_down = GPIO.PUD_UP)#The Door
+GPIO.setup(12, GPIO.IN, pull_up_down = GPIO.PUD_UP)#Increment Time
+GPIO.setup(15, GPIO.IN, pull_up_down = GPIO.PUD_UP)#Decrement Time
 
 #Dmx Output
 GPIO.setup(14, GPIO.OUT)#Used for DMX Trigger OFF A1
@@ -64,6 +67,7 @@ endCheck = False
 startCheck = False
 startTime = 0
 finalCheck = False
+timeCheck = 0
 try:
     while True:
         button_quit = GPIO.input(5)
@@ -73,6 +77,8 @@ try:
         button_loop = GPIO.input(26)
         button_RED = GPIO.input(11)
         door_Switch = GPIO.input(9)
+        time_decremennt = GPIO.input(15)
+        time_increment = GPIO.input(12)
 #        trigger_END = GPIO.input(2)
         trigger_WIN = GPIO.input(3)
         player.play()#This is in the while loop. But it doesn't reset the video. Strange'
@@ -137,12 +143,20 @@ try:
             player.set_position(tempTime)
         if (door_Switch == False and doorCheck == False):#Makes sure that jumping here only triggers once
              print('Door Switch Triggered, Entering Chamber Video')
+             tempTime = player.position()
              GPIO.output(15, True)
              player.set_position(chamberStart_time)
              doorCheck = True
              time.sleep(arduino_delay)
              GPIO.output(15,False)
-             time.sleep(.2)
+             time.sleep(.2)#12 and 16
+        if (button_RED == False and redCheck == False and player.position() > RedAllowTalk):
+            print('THEY PRESSED THE RED BUTTON')
+            tempTime = player.position()
+            player.set_position(redbuttonStart_time)
+            redCheck = True
+            time.sleep(30)
+            player.set_position(tempTime)
         if (player.position() > loseEnd_time and player.position() < (loseEnd_time + 4)):#Resets Game to intro
              print('Video (LOSE) Ended, Resetting Back to Intro')
              resetCheck = True#Make sure that it only resets once
@@ -163,8 +177,17 @@ try:
             cuFunctions.killall()
             print('Force Close by GameMaster')
             break
+        if (time_increment == False):
+            currentTime = currentTime + 60
+            timeCheck = (currentTime - startTime) % 60
+            print('Time Decremented, %d minutes remaning')
+            time.sleep(.2)
+        if (time_increment == True):
+            currentTime = currentTime - 60
+            timeCheck = (currentTime - startTime) % 60
+            print('Time Incremented, %d minutes remaning')
+            time.sleep(.2)
 finally:
     print('System Exit via GameMaster or Error')
     os.system('sudo killall omxplayer.bin')
     GPIO.cleanup()
-
