@@ -206,7 +206,7 @@ try:
             timeCheck = (currentTime - startTime) % 60
             print 'Time Decremented, %d minutes remaining' % timeCheck
             time.sleep(.2)
-        if time_increment == False:
+        if time_decrement == False:
             currentTime = currentTime - 60
             timeCheck = (currentTime - startTime) % 60
             print 'Time Incremented, %d minutes remaining' % timeCheck
