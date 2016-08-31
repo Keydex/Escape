@@ -202,12 +202,12 @@ try:
             print 'Force Close by GameMaster'
             break
         if time_increment == False:
-            currentTime = currentTime + 60
+            currentTime += 60
             timeCheck = (currentTime - startTime)
             print 'Time Incremented, %d seconds' % timeCheck
             time.sleep(.2)
         if time_decrement == False:
-            currentTime = currentTime - 60
+            currentTime -= 60
             timeCheck = (currentTime - startTime)
             print 'Time Decremented, %d seconds' % timeCheck
             time.sleep(.2)
