@@ -98,6 +98,7 @@ try:
         player.play()  # This is in the while loop. But it doesn't reset the video. Strange'
         currentTime = time.time() + debug_offset
         if button_loop == False or resetCheck == True:
+            debug_offset = 0
             resetCheck = False
             doorCheck = False
             redCheck = False
@@ -204,13 +205,13 @@ try:
             break
         if time_increment == False:
             debug_offset += 60
-            timeCheck = (currentTime - startTime + debug_offset) % 60
-            print 'Time Incremented, %d seconds' % timeCheck
+            timeCheck = (currentTime - startTime + debug_offset) / 60
+            print 'Time Incremented, %d minute mark' % timeCheck
             time.sleep(.2)
         if time_decrement == False:
             debug_offset -= 60
-            timeCheck = (currentTime - startTime  + debug_offset) % 60
-            print 'Time Decremented, %d seconds' % timeCheck
+            timeCheck = (currentTime - startTime  + debug_offset) / 60
+            print 'Time Decremented, %d minute mark' % timeCheck
             time.sleep(.2)
 finally:
     print 'System Exit via GameMaster or Error'
