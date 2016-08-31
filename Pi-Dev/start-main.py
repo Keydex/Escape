@@ -205,12 +205,12 @@ try:
             break
         if time_increment == False:
             debug_offset += 60
-            timeCheck = (currentTime - startTime + debug_offset) / 60
+            timeCheck = (currentTime - startTime + debug_offset) / 120
             print 'Time Incremented, %d minute mark' % timeCheck
             time.sleep(.2)
         if time_decrement == False:
             debug_offset -= 60
-            timeCheck = (currentTime - startTime  + debug_offset) / 60
+            timeCheck = (currentTime - startTime  + debug_offset) / 120#Not sure why it has to be 120 not 60
             print 'Time Decremented, %d minute mark' % timeCheck
             time.sleep(.2)
 finally:
