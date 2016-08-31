@@ -20,8 +20,8 @@ GPIO.setup(19, GPIO.IN, pull_up_down = GPIO.PUD_UP)#Start Game Button
 GPIO.setup(26, GPIO.IN, pull_up_down = GPIO.PUD_UP)#Force Back to Loop (Or reset Game)
 GPIO.setup(11, GPIO.IN, pull_up_down = GPIO.PUD_UP)#The Red Button
 GPIO.setup(9, GPIO.IN, pull_up_down = GPIO.PUD_UP)#The Door
-GPIO.setup(12, GPIO.IN, pull_up_down = GPIO.PUD_UP)#Increment Time
-GPIO.setup(15, GPIO.IN, pull_up_down = GPIO.PUD_UP)#Decrement Time
+GPIO.setup(17, GPIO.IN, pull_up_down = GPIO.PUD_UP)#Increment Time
+GPIO.setup(27, GPIO.IN, pull_up_down = GPIO.PUD_UP)#Decrement Time
 
 #Dmx Output
 GPIO.setup(14, GPIO.OUT)#Used for DMX Trigger OFF A1
@@ -77,8 +77,8 @@ try:
         button_loop = GPIO.input(26)
         button_RED = GPIO.input(11)
         door_Switch = GPIO.input(9)
-        time_decremennt = GPIO.input(15)
-        time_increment = GPIO.input(12)
+        time_decremennt = GPIO.input(27)
+        time_increment = GPIO.input(17)
 #        trigger_END = GPIO.input(2)
         trigger_WIN = GPIO.input(3)
         player.play()#This is in the while loop. But it doesn't reset the video. Strange'
@@ -149,6 +149,10 @@ try:
              doorCheck = True
              time.sleep(arduino_delay)
              GPIO.output(15,False)
+             if(endCheck == True){
+                time.sleep(81)
+                player.set_position(tempTime)
+             }
              time.sleep(.2)#12 and 16
         if (button_RED == False and redCheck == False and player.position() > RedAllowTalk):
             print('THEY PRESSED THE RED BUTTON')
@@ -180,12 +184,12 @@ try:
         if (time_increment == False):
             currentTime = currentTime + 60
             timeCheck = (currentTime - startTime) % 60
-            print('Time Decremented, %d minutes remaning')
+            print('Time Decremented, %d minutes remaining')
             time.sleep(.2)
         if (time_increment == True):
             currentTime = currentTime - 60
             timeCheck = (currentTime - startTime) % 60
-            print('Time Incremented, %d minutes remaning')
+            print('Time Incremented, %d minutes remaining')
             time.sleep(.2)
 finally:
     print('System Exit via GameMaster or Error')
