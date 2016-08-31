@@ -79,6 +79,7 @@ startCheck = False
 startTime = 0
 finalCheck = False
 timeCheck = 0
+debug_offset = 0
 try:
     while True:
         button_quit = GPIO.input(5)
@@ -95,7 +96,7 @@ try:
 
         trigger_WIN = GPIO.input(3)
         player.play()  # This is in the while loop. But it doesn't reset the video. Strange'
-        currentTime = time.time()
+        currentTime = time.time() + debug_offset
         if button_loop == False or resetCheck == True:
             resetCheck = False
             doorCheck = False
@@ -202,13 +203,13 @@ try:
             print 'Force Close by GameMaster'
             break
         if time_increment == False:
-            currentTime += 60
-            timeCheck = (currentTime - startTime)
+            debug_offset += 60
+            timeCheck = (currentTime - startTime + debug_offset) % 60
             print 'Time Incremented, %d seconds' % timeCheck
             time.sleep(.2)
         if time_decrement == False:
-            currentTime -= 60
-            timeCheck = (currentTime - startTime)
+            debug_offset -= 60
+            timeCheck = (currentTime - startTime  + debug_offset) % 60
             print 'Time Decremented, %d seconds' % timeCheck
             time.sleep(.2)
 finally:
