@@ -203,13 +203,13 @@ try:
             break
         if time_increment == False:
             currentTime = currentTime + 60
-            timeCheck = (currentTime - startTime) % 60
-            print 'Time Decremented, %d minutes remaining' % timeCheck
+            timeCheck = (currentTime - startTime)
+            print 'Time Incremented, %d seconds' % timeCheck
             time.sleep(.2)
         if time_decrement == False:
             currentTime = currentTime - 60
-            timeCheck = (currentTime - startTime) % 60
-            print 'Time Incremented, %d minutes remaining' % timeCheck
+            timeCheck = (currentTime - startTime)
+            print 'Time Decremented, %d seconds' % timeCheck
             time.sleep(.2)
 finally:
     print 'System Exit via GameMaster or Error'
