@@ -204,12 +204,12 @@ try:
         if time_increment == False:
             currentTime = currentTime + 60
             timeCheck = (currentTime - startTime) % 60
-            print 'Time Decremented, %d minutes remaining'
+            print 'Time Decremented, %d minutes remaining' % timeCheck
             time.sleep(.2)
-        if time_increment == True:
+        if time_increment == False:
             currentTime = currentTime - 60
             timeCheck = (currentTime - startTime) % 60
-            print 'Time Incremented, %d minutes remaining'
+            print 'Time Incremented, %d minutes remaining' % timeCheck
             time.sleep(.2)
 finally:
     print 'System Exit via GameMaster or Error'
