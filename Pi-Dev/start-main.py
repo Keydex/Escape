@@ -88,7 +88,7 @@ try:
         button_loop = GPIO.input(26)
         button_RED = GPIO.input(11)
         door_Switch = GPIO.input(9)
-        time_decremennt = GPIO.input(27)
+        time_decrement = GPIO.input(27)
         time_increment = GPIO.input(17)
 
 #        trigger_END = GPIO.input(2)
